@@ -5,11 +5,12 @@
 
 # Install Imagemagick for thumnail creation
 # https://www.imagemagick.org/script/index.php
-# If you use Homebrew / Brew, you can simply install it with the command:
+# If you use Homebrew / Brew, you can simply install it with:
 # "brew install imagemagick"
 
-# Install imgur.sh for automatic image uploading
-# https://github.com/tremby/imgur.sh
+# A modified copy of imgur.sh is bundled with Spex for automatic 
+# image uploading. Credit for original goes to: 
+#https://github.com/tremby/imgur.sh
 
 ####################################################################
 # OPTIONS
@@ -35,9 +36,11 @@ song_10s_thumb="spectro.last10s.thumb.png"
 # I used the -Y flag instead of the -y flag, which will automatically 
 # adjust the value to a value that is "one more than a power of two", 
 # so the value might be adjusted lower. This optimizes for speed.
-# If you want a more exact value, change the script to use "-y".
-x_axis=1024
-y_axis=550
+# If you want a more exact value, change the script to use "-y". I have
+# disabled the x value to let Sox automatically scale according to Y. 
+# This seems to result in clearer spectrograms.
+#x_axis=1024
+y_axis=1025
 
 # Would you like the script to generate thumbnails for your spectrograms?
 # "true" for yes "false" for no. This requires Imagemagick as a dependency. 
@@ -84,14 +87,14 @@ spect_nofolder () {
 	cd "$filedir"
     for fileA in "$fileinput"
 	do
-		sox "$fileA" -n spectrogram -t "$img_title" -o "$song_full" -x "$x_axis" -Y "$y_axis"
-		sox "$fileA" -n trim -10 spectrogram -t "$img_title" -o "$song_10s" -x "$x_axis" -Y "$y_axis"
+		sox "$fileA" -n spectrogram -t "$img_title" -o "$song_full" -Y "$y_axis"
+		sox "$fileA" -n trim -10 spectrogram -t "$img_title" -o "$song_10s" -Y "$y_axis"
 	done
 
 	cd "$currentdir"
 }
 
-# Function to Create spectrograms with no subfolder
+# Function to Create spectrograms with subfolder
 spect_withfolder () {
 	cd "$filedir"
 	mkdir -p "$subfolder_title"
@@ -99,8 +102,8 @@ spect_withfolder () {
 	subdir="$PWD"
     for fileB in "$fileinput"
 	do
-		sox "$fileB" -n spectrogram -t "$img_title" -o "$song_full" -x "$x_axis" -Y "$y_axis"
-		sox "$fileB" -n trim -10 spectrogram -t "$img_title" -o "$song_10s" -x "$x_axis" -Y "$y_axis"
+		sox "$fileB" -n spectrogram -t "$img_title" -o "$song_full" -Y "$y_axis"
+		sox "$fileB" -n trim -10 spectrogram -t "$img_title" -o "$song_10s" -Y "$y_axis"
 	done
 
 	cd "$currentdir"
@@ -131,38 +134,32 @@ echo "... Spectrograms Generated"
 ####################################################################
 # THUMBNAIL CREATION
 
-if [ "$subfolder" = "true" ]
+if [ "$thumbnails" = "true" ]
 then
 	cd "$subdir"
 	magick convert "$song_full" -resize 25% "$song_full_thumb"
 	magick convert "$song_10s" -resize 25% "$song_10s_thumb"
 	cd "$currentdir"
+	echo "... Thumbnails Generated"
 else
-	cd "$filedir"
-	magick convert "$song_full" -resize 25% "$song_full_thumb"
-	magick convert "$song_10s" -resize 25% "$song_10s_thumb"
-	cd "$currentdir"
+	thumb=null
 fi
-
-echo "... Thumbnails Generated"
 
 ####################################################################
 # IMGUR UPLOAD
 
-if [ "$subfolder" = "true" ]
+if [ "$uploadimgur" = "true" ]
 then
 	cd "$subdir"
 	echo "... Uploading Images to Imgur"
 	imgur "$song_full" "$song_full_thumb" "$song_10s" "$song_10s_thumb"
+	echo "... Images Uploaded to Imgur"
+	echo "... BBcode Copied to Clipboard"
 else
-	cd "$filedir"
-	echo "... Uploading Images to Imgur"
-	imgur "$song_full" "$song_full_thumb" "$song_10s" "$song_10s_thumb"
+	imgurup=null
 fi
 
 cd "$currentdir"
-echo "... Images Uploaded to Imgur"
-echo "... BBcode Copied to Clipboard"
 
 ####################################################################
 # UNSET VARIABLES
