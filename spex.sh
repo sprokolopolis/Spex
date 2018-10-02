@@ -16,7 +16,7 @@
 # OPTIONS
 
 # If you want spectrograms to be stored in a subfolder, 
-# set this to "true"; otherwise set to "flase"
+# set this to "true"; otherwise set to "false"
 subfolder="true"
 
 # Set name of optional subfolder. ex: "Spectrograms" or "Extras"
